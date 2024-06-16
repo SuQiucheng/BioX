@@ -3,13 +3,9 @@
     <div class="eig-filter">
       <div class="filter-right">
         <a-space>
-                <a-input-search
-                  v-model:value="searchValue"
-                  placeholder="input search text"
-                  style="width: 200px"
-                  @search="onSearch"
-                />
-        <a-button class="eig-icon-btn" @click="onRefresh">
+          <a-input-search v-model:value="searchValue" placeholder="input search text" style="width: 200px"
+            @search="onSearch" />
+          <a-button class="eig-icon-btn" @click="onRefresh">
             <template #icon>
               <RedoOutlined :style="{ color: 'rgba(0, 0, 0, 0.45)' }" />
             </template>
@@ -18,60 +14,28 @@
       </div>
     </div>
     <div class="eig-table">
-      <a-table
-        :columns="columns"
-        :data-source="recordList"
-        :scroll="{ y: 'calc(100vh - 220px' }"
-      >
+      <a-table :columns="columns" :data-source="recordList" :scroll="{ y: 'calc(100vh - 220px' }">
         <template #bodyCell="{ column, text, record }">
-          <template
-            v-if="
-              column.dataIndex === 'name' || column.dataIndex === 'describe'
-            "
-          >
+          <template v-if="column.dataIndex === 'name' || column.dataIndex === 'describe'
+            ">
             <div class="editable-cell">
-              <div
-                v-if="editableData[`${record.id}_${column.dataIndex}`]"
-                class="editable-cell-input-wrapper"
-              >
-                <a-input
-                  v-if="column.dataIndex === 'name'"
-                  v-model:value="
-                    editableData[`${record.id}_${column.dataIndex}`].name
-                  "
-                  ref="input_name"
-                  style="width: 120px"
-                  size="small"
-                  @pressEnter="save(record.id, column.dataIndex)"
-                  @blur="save(record.id, column.dataIndex)"
-                />
+              <div v-if="editableData[`${record.id}_${column.dataIndex}`]" class="editable-cell-input-wrapper">
+                <a-input v-if="column.dataIndex === 'name'" v-model:value="editableData[`${record.id}_${column.dataIndex}`].name
+                  " ref="input_name" style="width: 120px" size="small" @pressEnter="save(record.id, column.dataIndex)"
+                  @blur="save(record.id, column.dataIndex)" />
 
-                <a-input
-                  v-if="column.dataIndex === 'describe'"
-                  v-model:value="
-                    editableData[`${record.id}_${column.dataIndex}`].describe
-                  "
-                  size="small"
-                  ref="input_describe"
-                  @pressEnter="save(record.id, column.dataIndex)"
-                  @blur="save(record.id, column.dataIndex)"
-                />
+                <a-input v-if="column.dataIndex === 'describe'" v-model:value="editableData[`${record.id}_${column.dataIndex}`].describe
+                  " size="small" ref="input_describe" @pressEnter="save(record.id, column.dataIndex)"
+                  @blur="save(record.id, column.dataIndex)" />
               </div>
               <div v-else class="editable-cell-text-wrapper">
                 <p>
-                  <a
-                    v-if="column.dataIndex === 'name'"
-                    Href="javascript:;"
-                    @click="lookRecord(record.id)"
-                    >{{ text || " " }}</a
-                  >
+                  <a v-if="column.dataIndex === 'name'" Href="javascript:;" @click="lookRecord(record.id)">{{ text || " "
+                  }}</a>
                   <span v-else>
                     {{ text || " " }}
                   </span>
-                  <edit-outlined
-                    class="editable-cell-icon"
-                    @click="edit(record.id, column.dataIndex)"
-                  />
+                  <edit-outlined class="editable-cell-icon" @click="edit(record.id, column.dataIndex)" />
                 </p>
                 <p v-if="column.dataIndex === 'name'">
                   <span>{{ record.instanceID }}</span>
@@ -98,7 +62,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { ref, reactive, onMounted, nextTick } from "vue";
+import { ref, reactive, onMounted, nextTick, toRaw } from "vue";
 import type { Ref, UnwrapRef } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { RedoOutlined } from "@ant-design/icons-vue";
@@ -184,11 +148,11 @@ const deleteRow = (record: DataItem) => {
 const exportCsv = async (record: DataItem) => {
   let csvContent = ""
   
-  // 列值
   const metaDataKeys = columns.map(column => column.dataIndex);
+  // 列值
   metaDataKeys.forEach(element => {
-      csvContent = csvContent + element+":"+record[element]
-    });
+    csvContent = csvContent + element + ":" + record[element]+"\n"
+  });
 
   csvContent += "\n"
 
@@ -205,15 +169,14 @@ const exportCsv = async (record: DataItem) => {
   const sourceDataKeys = Object.keys(sourceData[0])
   console.log(sourceDataKeys)
   // 转换数据到CSV格式
-  sourceData.forEach(sd => {
-    console.log(typeof sd)
-    sd.forEach(element => {
-      csvContent = csvContent + sd[element]+","
+  sourceData.forEach(pkgData => {
+    const entries = Object.entries(pkgData)
+    entries.forEach(([key,value]) => {
+      csvContent = csvContent + value + ","
     });
     csvContent += "\n"
   }
   )
-  console.log(csvContent)
 
   // 创建一个Blob对象
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -224,7 +187,7 @@ const exportCsv = async (record: DataItem) => {
   // 创建一个a标签模拟点击进行下载
   const a = document.createElement('a');
   a.href = url;
-  a.download = record.name+'.csv'; // 设置下载的文件名
+  a.download = record.name + '.csv'; // 设置下载的文件名
   document.body.appendChild(a);
   a.click();
 
